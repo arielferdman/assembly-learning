@@ -1,5 +1,5 @@
 section .bss
-	Buff resvib 1
+	Buff resb 1
 section .data
 section .text
 	global _start
@@ -23,9 +23,9 @@ Read:	mov eax,3 	; specify sys_read call
 	cmp byte [Buff],7Ah ; test input char against lower case 'z'
 	ja Write	; if above 'z' in ASCII char, not lowercase
 			; at this point we have a lowercase character
-	sub, byte [Buff],20h ; substract 20h from lowercase to get uppercase
+	sub byte [Buff],20h ; substract 20h from lowercase to get uppercase
 			; and then write the char to stdout
-Write:	mov eax,1	; specify sys_write system call
+Write:	mov eax,4	; specify sys_write system call
 	mov ebx,1	; specify file descriptor 1 stdout
 	mov ecx,Buff	; pass address of the character to write
 	mov edx,1	; pass number of chars to write
