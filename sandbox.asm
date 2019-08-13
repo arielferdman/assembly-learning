@@ -26,12 +26,13 @@ _start:
 
 	mov ebp,eax
 	xor ebx,ebx
-	
+	mov ecx,ADDITIONLENGTH
+	dec ecx	
 Insert:
-	mov ax, byte [Addition + ebx]
-	mov byte [Buff + ebp + ebx], ax
+	mov al, byte [Addition + ebx]
+	mov byte [Buff + ebp - 1 + ebx], al
 	inc ebx
-	cmp ebx,ADDITIONLENGTH
+	cmp ebx,ecx
 	jna Insert
 	
 	add ebp,ebx
