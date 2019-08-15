@@ -3,9 +3,9 @@ section .bss
 	Buff resb BUFFLEN
 section .data
 	HexStr db " 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",10
+	HEXLEN equ $-HexStr
 	OriginalStr db "                                                ",10
-	HEXLEN equ 49
-	ORIGINALSTRLENGTH equ 49
+	ORIGINALSTRLENGTH equ $-OriginalStr
 	Digits db "0123456789ABCDEF"
 section .text
 	global _start
