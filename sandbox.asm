@@ -38,7 +38,9 @@ Scan:
 	cmp al,0Ah
 	je  NewLine
 	cmp al,20h
-	je  Space	
+	je  Space
+	cmp al,09h
+	je  Tab	
 	mov byte [OriginalStr + edx + 2],al
 
 Resume:
@@ -75,7 +77,12 @@ NewLine:
 Space:
 	mov byte [OriginalStr + edx + 1],5Ch
 	mov byte [OriginalStr + edx + 2],73h	
-	jmp Resume	
+	jmp Resume
+
+Tab:	
+	mov byte [OriginalStr + edx + 1],5Ch
+	mov byte [OriginalStr + edx + 2],74h	
+	jmp Resume
 	
 ZeroOriginalString:
 	
