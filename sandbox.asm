@@ -4,8 +4,8 @@ section .bss
 section .data
 	HexStr db " 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",10
 	OriginalStr db "                                                ",10
-	HEXLEN equ $-HexStr
-	ORIGINALSTRLENGTH equ $-OriginalStr
+	HEXLEN equ 49
+	ORIGINALSTRLENGTH equ 49
 	Digits db "0123456789ABCDEF"
 section .text
 	global _start
