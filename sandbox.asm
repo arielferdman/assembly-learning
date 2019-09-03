@@ -1,6 +1,7 @@
 section .bss
 	
 	BUFFLEN equ 10h
+	DumpLineBytes equ 10h
 	Buff resb BUFFLEN
 
 section .data
@@ -33,48 +34,45 @@ section .data
 
 section .text
 
-ClearLine:
-	mov edx,15
-
-DumpChar:
-	call DumpToAscline
-	mov ebx,eax
-	call GetLowNybbleHexChar
-	call GetHighNybbleHexChar
-
-DumpLowNybbleHexChar:
+ReadLine:
+	push rax
+	push rbx
+	push rcx
+	push rdx
 	
+	mov rax,3
+	mov rbx,0
+	mov rcx,Buff
+	mov rdx,BUFFLEN
+	int 80h
+	mov rbp,rax
 
-DumpHighNybbleHexChar:
-	
-
-GetLowNybbleHexChar:
-	and eax,0000000Fh
-	mov al,byte [Hexdigits+eax]
+	pop rdx
+	pop rcx
+	pop rbx
+	pop rax
 	ret
 
-GetHighNybbleHexChar:
-	shr ebx,4
-	and ebx,0000000Fh
-	mov bl,byte [HexDigits+ebx]
-	ret
+DumpBuff:
+	xor rcx,rcx
+	mov
 
-DumpToAscline:
-	mov al,byte [DotXlat+eax]
-	mov byte [Ascline+edx+1],al
+Global _start
 
-
-
-
-
-
+_start:
+	nop
+	xor rsi,rsi
+	mov rax,Buff
+	call ReadLine
+	call DumpBuff
+	jmp  Exit
 
 
-
-
-
-
-
+Exit:
+	mov rax,1
+	mov rbx,0
+	int 80h
+	nop
 
 
 
