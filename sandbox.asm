@@ -55,7 +55,63 @@ ReadLine:
 
 DumpBuff:
 	xor rcx,rcx
-	mov
+	mov al, byte [Buff + ecx]
+	call DumpChar
+	inc rcx
+	inc rsi
+	call TestIfPrint
+	cmp r12,1h
+	je .print
+	call TestIfEndOfBuff
+	cmp r12,1h
+	je .return
+.print:
+	call PrintLine
+.return:
+	ret
+
+DumpChar:
+	push rdi
+	push rax
+
+	call GetHighNibble
+	mov rdi,rcx
+	lea edi,[edi*2 + edi]
+	mov rax,r12
+	mov byte [Dumpline + edi + 1],al
+	call GetLowNibble
+	mov rax,r12
+	mov byte [Dumpline + edi + 2],al
+	mov al,[Dotxlat + eax]
+	mov byte [Ascline + ecx],al
+
+	pop rax
+	pop rdi
+	ret
+	
+
+TestIfPrint:
+	push rax
+
+	mov r8,rax
+	and eax,00001111h
+	cmp eax,0
+	je .shouldPrint
+	mov r12,0h
+.shouldPrint:
+	mov r12,1h
+
+	pop rax
+	ret
+
+TestIfEndOfBuff:
+	cmp rcx,rbp
+	je .markEndOfBuff
+	mov r12,0h
+.markEndOfBuff:
+	mov r12,1h
+	
+	ret
 
 Global _start
 
