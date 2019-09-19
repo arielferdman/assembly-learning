@@ -1,43 +1,190 @@
 section .bss
-	Buff resb 1
+	
+	BUFFLEN equ 10h
+	DumpLineBytes equ 10h
+	Buff resb BUFFLEN
+
 section .data
+
+	Dumpline:	db " 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+	DUMPLEN		equ $-Dumpline
+	Ascline:	db "|................|",10
+	ASCLEN		equ $-Ascline
+	FULLLEN		equ $-Dumpline
+	
+	HexDigits:	db "0123456789ABCDEF"
+
+	DotXlat:	
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+			db 20h,21h,22h,23h,24h,25h,26h,27h,28h,29h,2Ah,2Bh,2Ch,2Dh,2Eh,2Fh
+			db 30h,31h,32h,33h,34h,35h,36h,37h,38h,39h,3Ah,3Bh,3Ch,3Dh,3Eh,3Fh
+			db 40h,41h,42h,43h,44h,45h,46h,47h,48h,49h,4Ah,4Bh,4Ch,4Dh,4Eh,4Fh
+			db 50h,51h,52h,53h,54h,55h,56h,57h,58h,59h,5Ah,5Bh,5Ch,5Dh,5Eh,5Fh
+			db 60h,61h,62h,63h,64h,65h,66h,67h,68h,69h,6Ah,6Bh,6Ch,6Dh,6Eh,6Fh
+			db 70h,71h,72h,73h,74h,75h,76h,77h,78h,79h,7Ah,7Bh,7Ch,7Dh,7Eh,2Eh
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+			db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+
 section .text
-	global _start
+
+ReadLine:
+	push rax
+	push rbx
+	push rcx
+	push rdx
+	
+	mov rax,3
+	mov rbx,0
+	mov rcx,Buff
+	mov rdx,BUFFLEN
+	int 80h
+	mov rbp,rax
+
+	pop rdx
+	pop rcx
+	pop rbx
+	pop rax
+	ret
+
+DumpBuff:
+	push rax
+	
+	xor rax,rax
+	xor rcx,rcx
+.scanChar:
+	mov al, byte [Buff + ecx]
+	mov r8,rax
+	call DumpChar
+	inc rcx
+	inc rsi
+	mov r8,rcx
+	call TestIfPrint
+	cmp r12,1h
+	je .print
+.resume:	
+	call TestIfEndOfBuff
+	cmp r12,1h
+	je .return
+	jmp .scanChar
+.print:
+	call PrintLine
+	jmp .resume
+.return:
+	pop rax
+	ret
+
+DumpChar:
+	push rdi
+	push rax
+
+	call GetHighNibble
+	mov rdi,rcx
+	lea edi,[edi*2 + edi]
+	mov rax,r12
+	mov byte [Dumpline + edi + 1],al
+	call GetLowNibble
+	mov rax,r12
+	mov byte [Dumpline + edi + 2],al
+	mov al,[DotXlat + eax]
+	mov byte [Ascline + ecx],al
+
+	pop rax
+	pop rdi
+	ret
+	
+
+TestIfPrint:
+	push rax
+
+	mov rax,r8
+	and eax,0000000Fh
+	cmp eax,0
+	je .shouldPrint
+	mov r12,0h
+	jmp .return
+.shouldPrint:
+	mov r12,1h
+.return:
+	pop rax
+	ret
+
+TestIfEndOfBuff:
+	cmp rcx,rbp
+	je .markEndOfBuff
+	mov r12,0h
+        jmp .return
+.markEndOfBuff:
+	mov r12,1h
+.return:
+	ret
+
+PrintLine:
+	mov rax,4
+	mov rbx,1
+	mov rcx,Dumpline
+	mov rdx,FULLLEN
+	int 80h	
+
+	ret
+
+GetHighNibble:
+	push rax
+	
+	mov rax,r8
+	shr al,4
+	and eax,0000000Fh
+	mov al,byte [HexDigits + eax]
+	mov r12,rax
+	
+	pop rax
+	ret
+
+GetLowNibble:
+	push rax
+
+	mov rax,r8
+	and eax,0000000Fh
+	mov al,byte [HexDigits + eax]
+	mov r12,rax
+	
+	pop rax	
+	ret
+
+Global _start
 
 _start:
 	nop
-
-Read:	mov eax,3 	; specify sys_read call
-	mov ebx,0	; specify file descriptor 0: standard input
-	mov ecx,Buff	; pass adress of the buffer to read to 
-	mov edx,1	; tell sys_read to read 1 char from stdin
-	int 80h		; call sys_read
-
-	cmp eax,0	; look at sys_read return value in eax
-	je Exit		; jump if equal to 0 (EOF CHAR) to exit
-			; or fall through to test for lowercase
-
-	cmp byte [Buff],61h ; test input char against lower case 'a'
-	jb Write	; if below 'a' in ASCII chart, not lowercase
-	
-	cmp byte [Buff],7Ah ; test input char against lower case 'z'
-	ja Write	; if above 'z' in ASCII char, not lowercase
-			; at this point we have a lowercase character
-	sub byte [Buff],20h ; substract 20h from lowercase to get uppercase
-			; and then write the char to stdout
-Write:	mov eax,4	; specify sys_write system call
-	mov ebx,1	; specify file descriptor 1 stdout
-	mov ecx,Buff	; pass address of the character to write
-	mov edx,1	; pass number of chars to write
-	int 80h		; call sys_write
-	jmp Read	; then go to the beggining to get another character
-
-Exit:	mov eax, 1	; code for Exit syscall
-	mov ebx, 0	; return code 0 (program terminated without errors)
-	int 80h		; make a kernel call to exit program
+	mov rax,Dumpline
+	mov rbx,Ascline
+	mov rcx,Buff
+	xor rsi,rsi
+	call ReadLine
+	call DumpBuff
+	jmp  Exit
 
 
-
+Exit:
+	mov rax,1
+	mov rbx,0
+	int 80h
 	nop
+
+
+
+
+
+
+
+
+
+
+
 
 

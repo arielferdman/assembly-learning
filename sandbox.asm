@@ -46,6 +46,7 @@ ReadLine:
 	mov rdx,BUFFLEN
 	int 80h
 	mov rbp,rax
+	mov r12,rax
 
 	pop rdx
 	pop rcx
@@ -83,7 +84,7 @@ DumpBuff:
 DumpChar:
 	push rdi
 	push rax
-
+		
 	call GetHighNibble
 	mov rdi,rcx
 	lea edi,[edi*2 + edi]
@@ -92,9 +93,11 @@ DumpChar:
 	call GetLowNibble
 	mov rax,r12
 	mov byte [Dumpline + edi + 2],al
-	mov al,[DotXlat + eax]
-	mov byte [Ascline + ecx],al
-
+	mov rax,r8
+	mov al,byte [DotXlat + eax]
+	mov byte [Ascline + ecx + 1],al
+	
+	pop rbx
 	pop rax
 	pop rdi
 	ret
@@ -165,9 +168,12 @@ _start:
 	mov rbx,Ascline
 	mov rcx,Buff
 	xor rsi,rsi
+Scan:
 	call ReadLine
+	cmp r12,-1h
+	je Exit
 	call DumpBuff
-	jmp  Exit
+	jmp Scan
 
 
 Exit:
