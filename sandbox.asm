@@ -46,6 +46,7 @@ ReadLine:
 	mov rdx,BUFFLEN
 	int 80h
 	mov rbp,rax
+	dec rbp
 	mov r12,rax
 
 	pop rdx
@@ -65,17 +66,19 @@ DumpBuff:
 	call DumpChar
 	inc rcx
 	inc rsi
-	mov r8,rcx
+	mov r8,rsi
 	call TestIfPrint
 	cmp r12,1h
 	je .print
 .resume:	
+	mov r8,rcx
 	call TestIfEndOfBuff
 	cmp r12,1h
 	je .return
 	jmp .scanChar
 .print:
 	call PrintLine
+	xor rcx,rcx
 	jmp .resume
 .return:
 	pop rax
@@ -97,7 +100,6 @@ DumpChar:
 	mov al,byte [DotXlat + eax]
 	mov byte [Ascline + ecx + 1],al
 	
-	pop rbx
 	pop rax
 	pop rdi
 	ret
@@ -119,6 +121,9 @@ TestIfPrint:
 	ret
 
 TestIfEndOfBuff:
+	push rcx	
+
+	mov rcx,r8
 	cmp rcx,rbp
 	je .markEndOfBuff
 	mov r12,0h
@@ -126,6 +131,7 @@ TestIfEndOfBuff:
 .markEndOfBuff:
 	mov r12,1h
 .return:
+	pop rcx
 	ret
 
 PrintLine:
