@@ -54,20 +54,30 @@ ReadLine:
 	ret
 
 DumpBuff:
+	push rax
+	
+	xor rax,rax
 	xor rcx,rcx
+.scanChar:
 	mov al, byte [Buff + ecx]
+	mov r8,rax
 	call DumpChar
 	inc rcx
 	inc rsi
+	mov r8,rcx
 	call TestIfPrint
 	cmp r12,1h
 	je .print
+.resume:	
 	call TestIfEndOfBuff
 	cmp r12,1h
 	je .return
+	jmp .scanChar
 .print:
 	call PrintLine
+	jmp .resume
 .return:
+	pop rax
 	ret
 
 DumpChar:
@@ -82,7 +92,7 @@ DumpChar:
 	call GetLowNibble
 	mov rax,r12
 	mov byte [Dumpline + edi + 2],al
-	mov al,[Dotxlat + eax]
+	mov al,[DotXlat + eax]
 	mov byte [Ascline + ecx],al
 
 	pop rax
@@ -93,14 +103,15 @@ DumpChar:
 TestIfPrint:
 	push rax
 
-	mov r8,rax
-	and eax,00001111h
+	mov rax,r8
+	and eax,0000000Fh
 	cmp eax,0
 	je .shouldPrint
 	mov r12,0h
+	jmp .return
 .shouldPrint:
 	mov r12,1h
-
+.return:
 	pop rax
 	ret
 
@@ -108,17 +119,52 @@ TestIfEndOfBuff:
 	cmp rcx,rbp
 	je .markEndOfBuff
 	mov r12,0h
+        jmp .return
 .markEndOfBuff:
 	mov r12,1h
+.return:
+	ret
+
+PrintLine:
+	mov rax,4
+	mov rbx,1
+	mov rcx,Dumpline
+	mov rdx,FULLLEN
+	int 80h	
+
+	ret
+
+GetHighNibble:
+	push rax
 	
+	mov rax,r8
+	shr al,4
+	and eax,0000000Fh
+	mov al,byte [HexDigits + eax]
+	mov r12,rax
+	
+	pop rax
+	ret
+
+GetLowNibble:
+	push rax
+
+	mov rax,r8
+	and eax,0000000Fh
+	mov al,byte [HexDigits + eax]
+	mov r12,rax
+	
+	pop rax	
 	ret
 
 Global _start
 
 _start:
 	nop
+	mov rax,Dumpline
+	mov rbx,Ascline
+	mov rcx,Buff
 	xor rsi,rsi
-	mov rax,Buff
 	call ReadLine
 	call DumpBuff
 	jmp  Exit
