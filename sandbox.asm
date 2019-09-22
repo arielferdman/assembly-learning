@@ -46,7 +46,6 @@ ReadLine:
 	mov rdx,BUFFLEN
 	int 80h
 	mov rbp,rax
-	dec rbp
 	mov r12,rax
 
 	pop rdx
@@ -78,7 +77,7 @@ DumpBuff:
 	jmp .scanChar
 .print:
 	call PrintLine
-	xor rcx,rcx
+	call ClearOutputLines
 	jmp .resume
 .return:
 	pop rax
@@ -104,6 +103,31 @@ DumpChar:
 	pop rdi
 	ret
 	
+ClearOutputLines:
+	push rax
+	push rbx
+	push rcx
+	push rdi
+	
+	xor rcx,rcx
+	mov rax,2Eh
+	mov rbx,0h
+	mov rdi,rcx
+.clearChar:
+	lea edi, [edi*2 + edi]	
+	mov byte [Ascline + ecx + 1],al
+	mov byte [Dumpline + edi + 1],bl
+	mov byte [Dumpline + edi + 2],bl
+	inc rcx
+	cmp rcx,ASCLEN
+	jb .clearChar
+	
+	pop rdi
+	pop rcx
+	pop rbx
+	pop rax
+	ret
+
 
 TestIfPrint:
 	push rax
@@ -135,12 +159,21 @@ TestIfEndOfBuff:
 	ret
 
 PrintLine:
+	push rax
+	push rbx
+	push rcx
+	push rdx	
+
 	mov rax,4
 	mov rbx,1
 	mov rcx,Dumpline
 	mov rdx,FULLLEN
 	int 80h	
 
+	pop rdx
+	pop rcx
+	pop rbx
+	pop rax
 	ret
 
 GetHighNibble:
@@ -176,13 +209,15 @@ _start:
 	xor rsi,rsi
 Scan:
 	call ReadLine
-	cmp r12,-1h
+	xor rcx,rcx
+	cmp r12,0h
 	je Exit
 	call DumpBuff
 	jmp Scan
 
 
 Exit:
+	call PrintLine
 	mov rax,1
 	mov rbx,0
 	int 80h
