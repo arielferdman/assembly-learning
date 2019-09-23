@@ -111,7 +111,7 @@ ClearOutputLines:
 	
 	xor rcx,rcx
 	mov rax,2Eh
-	mov rbx,0h
+	mov rbx,30h
 	mov rdi,rcx
 .clearChar:
 	lea edi, [edi*2 + edi]	
@@ -119,7 +119,8 @@ ClearOutputLines:
 	mov byte [Dumpline + edi + 1],bl
 	mov byte [Dumpline + edi + 2],bl
 	inc rcx
-	cmp rcx,ASCLEN
+	mov rdi,rcx
+	cmp rcx,10h
 	jb .clearChar
 	
 	pop rdi
