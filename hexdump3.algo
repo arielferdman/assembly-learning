@@ -1,0 +1,25 @@
+main:
+
+.read
+	fill Buff from stdin
+	if eax is 0 goto exit
+	else call BuffToLine
+	do the modtest on esi with 16
+	if test didnt pass go to .read
+	call printline
+	call clearline
+	go to .read
+
+BuffToLine:
+
+	take byte from buff
+	move byte char equivalent to Ascline
+	move lower nibble of byte to Dumpline
+	move higher nibble of byte to Dumpline
+	increase ecx
+	increase esi
+	compare ecx to length of buff
+	if below repeat
+	else return
+	
+
